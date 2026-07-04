@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+<title>Northlight Meetings</title>
+</head>
+<body>
+
+  <!-- ── HOME SCREEN ─────────────────────────────────────────────────────── -->
+  <div id="screen-home" class="screen">
+    <div class="top-bar"></div>
+    <div class="app-header">
+      <div class="app-title">Northlight Meetings</div>
+      <button class="btn-icon" id="btn-settings-home" title="Settings">⚙</button>
+    </div>
+
+    <div class="home-cta">
+      <button class="btn-primary btn-large" id="btn-new-session">+ New Session</button>
+    </div>
+
+    <div class="section-label">Recent Sessions</div>
+    <div id="session-list" class="session-list">
+      <div class="empty-state">No sessions yet. Start your first recording.</div>
+    </div>
+  </div>
+
+  <!-- ── PRE-CALL SCREEN ─────────────────────────────────────────────────── -->
+  <div id="screen-precall" class="screen hidden">
+    <div class="top-bar"></div>
+    <div class="screen-header">
+      <button class="btn-back" id="btn-back-precall">← Back</button>
+      <div class="screen-title">New Session</div>
+    </div>
+
+    <div class="precall-body">
+      <div class="form-group">
+        <label class="form-label">Mode</label>
+        <div class="mode-selector">
+          <button class="mode-btn" data-mode="discover">
+            <span class="mode-icon">🔍</span>
+            <span class="mode-name">Discover</span>
+            <span class="mode-desc">Client needs &amp; pain points → SOW draft</span>
+          </button>
+          <button class="mode-btn" data-mode="progress">
+            <span class="mode-icon">✅</span>
+            <span class="mode-name">Progress</span>
+            <span class="mode-desc">Tasks done / blocked → ClickUp updates</span>
+          </button>
+          <button class="mode-btn" data-mode="notes">
+            <span class="mode-icon">📝</span>
+            <span class="mode-name">Notes</span>
+            <span class="mode-desc">Internal &amp; vendor calls → clean summary</span>
+          </button>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="input-client">Client Name</label>
+          <input id="input-client" class="form-input" type="text" placeholder="e.g. Jason Michaud" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="input-project">Project Name</label>
+          <input id="input-project" class="form-input" type="text" placeholder="e.g. Web Redesign" />
+        </div>
+      </div>
+
+      <div id="no-key-warning" class="warning-banner hidden">
+        ⚠ No Groq API key found. <button class="btn-link" id="btn-go-settings-from-warning">Open Settings</button> to add your key before recording.
+      </div>
+
+      <button class="btn-primary btn-large" id="btn-start-recording" disabled>
+        Start Recording
+      </button>
+    </div>
+  </div>
+
+  <!-- ── RECORDING SCREEN ────────────────────────────────────────────────── -->
+  <div id="screen-recording" class="screen hidden">
+    <div class="top-bar"></div>
+    <div class="recording-body">
+      <div class="rec-indicator"><span class="rec-dot"></span> Recording</div>
+      <div class="rec-timer" id="rec-timer">00:00:00</div>
+      <div class="rec-session-info" id="rec-session-info"></div>
+
+      <div class="level-meters">
+        <div class="meter-group">
+          <div class="meter-label">Mic</div>
+          <div class="meter-bar-bg"><div class="meter-bar" id="meter-mic"></div></div>
+        </div>
+        <div class="meter-group">
+          <div class="meter-label">System Audio</div>
+          <div class="meter-bar-bg"><div class="meter-bar" id="meter-system"></div></div>
+        </div>
+      </div>
+
+      <div class="rec-status" id="rec-status">Recording… capturing both audio streams</div>
+
+      <div class="rec-prompts" id="rec-prompts">
+        <div class="rec-prompts-header">
+          <span class="rec-prompts-title" id="rec-prompts-title">Cover in this call</span>
+          <button class="rec-prompts-toggle" id="btn-prompts-toggle">▾</button>
+        </div>
+        <ul class="rec-prompts-list" id="rec-prompts-list"></ul>
+      </div>
+
+      <button class="btn-stop" id="btn-stop-recording">■ Stop Recording</button>
+    </div>
+  </div>
+
+  <!-- ── FEEDBACK SCREEN ─────────────────────────────────────────────────── -->
+  <div id="screen-feedback" class="screen hidden">
+    <div class="top-bar"></div>
+    <div class="screen-header">
+      <button class="btn-back" id="btn-back-feedback">← Back</button>
+      <div class="screen-title">Post-Call Note</div>
+    </div>
+
+    <div class="feedback-body">
+      <div class="feedback-desc">
+        <div class="feedback-desc-title">Add context before analysis runs</div>
+        <div class="feedback-desc-sub">Speak a quick note — corrections, priorities, things you noticed. This gets injected as high-priority context that the AI will use to shape the output.</div>
+      </div>
+
+      <div id="feedback-idle-ui">
+        <button class="btn-feedback-record" id="btn-feedback-start">● Start Note</button>
+      </div>
+
+      <div id="feedback-recording-ui" class="hidden">
+        <div class="feedback-rec-row">
+          <span class="rec-dot"></span>
+          <span class="feedback-rec-label">Recording note…</span>
+          <span class="feedback-timer" id="feedback-timer">00:00</span>
+        </div>
+        <button class="btn-stop btn-feedback-stop" id="btn-feedback-stop">■ Stop Note</button>
+      </div>
+
+      <div id="feedback-recorded-ui" class="hidden">
+        <div class="feedback-done-row">
+          <span class="feedback-done-check">✓</span>
+          <span class="feedback-done-label">Note recorded</span>
+          <button class="btn-link" id="btn-feedback-clear">Clear</button>
+        </div>
+      </div>
+
+      <button class="btn-primary btn-large btn-feedback-skip" id="btn-feedback-skip">Analyse Now →</button>
+    </div>
+  </div>
+
+  <!-- ── PROCESSING SCREEN ───────────────────────────────────────────────── -->
+  <div id="screen-processing" class="screen hidden">
+    <div class="top-bar"></div>
+    <div class="processing-body">
+      <div class="spinner"></div>
+      <div class="processing-title" id="processing-title">Transcribing your recording…</div>
+      <div class="processing-sub" id="processing-sub">This usually takes 30–60 seconds depending on call length.</div>
+    </div>
+  </div>
+
+  <!-- ── ERROR SCREEN ────────────────────────────────────────────────────── -->
+  <div id="screen-error" class="screen hidden">
+    <div class="top-bar"></div>
+    <div class="error-body">
+      <div class="error-icon">⚠</div>
+      <div class="error-title" id="error-title">Something went wrong</div>
+      <div class="error-message" id="error-message"></div>
+      <div class="error-actions">
+        <button class="btn-primary" id="btn-error-retry">Retry</button>
+        <button class="btn-ghost" id="btn-error-home">Back to Home</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── REVIEW SCREEN ───────────────────────────────────────────────────── -->
+  <div id="screen-review" class="screen hidden">
+    <div class="top-bar"></div>
+    <div class="screen-header">
+      <button class="btn-back" id="btn-back-review">← Back</button>
+      <div class="review-header-text">
+        <div class="screen-title" id="review-title">Review</div>
+        <div class="review-header-meta" id="review-meta"></div>
+      </div>
+    </div>
+
+    <div id="review-sections" class="review-sections"></div>
+
+    <div class="review-actions">
+      <button class="btn-ghost" id="btn-save-approved">Save Approved</button>
+      <button class="btn-primary" id="btn-save-all">Save All</button>
+    </div>
+  </div>
+
+  <!-- ── SESSION VIEW ────────────────────────────────────────────────────── -->
+  <div id="screen-session" class="screen hidden">
+    <div class="top-bar"></div>
+    <div class="screen-header">
+      <button class="btn-back" id="btn-back-session">← Back</button>
+      <div class="screen-title" id="session-view-title">Session</div>
+    </div>
+    <div class="session-meta" id="session-view-meta"></div>
+
+    <div class="session-tabs" id="session-tabs">
+      <button class="session-tab active" data-tab="transcript">Transcript</button>
+      <button class="session-tab" data-tab="analysis" id="session-tab-analysis">Analysis</button>
+    </div>
+
+    <div class="transcript-area" id="session-transcript"></div>
+    <div class="analysis-view hidden" id="session-analysis"></div>
+
+    <div class="session-footer" id="session-footer"></div>
+  </div>
+
+  <!-- ── SETTINGS SCREEN ─────────────────────────────────────────────────── -->
+  <div id="screen-settings" class="screen hidden">
+    <div class="top-bar"></div>
+    <div class="screen-header">
+      <button class="btn-back" id="btn-back-settings">← Back</button>
+      <div class="screen-title">Settings</div>
+    </div>
+
+    <div class="settings-body">
+      <div class="settings-section">
+        <div class="settings-section-label">Groq API Key</div>
+        <div class="settings-key-row">
+          <input id="settings-key-input" class="form-input" type="password" placeholder="gsk_…" />
+          <button class="btn-ghost btn-small" id="btn-toggle-key">Show</button>
+        </div>
+        <div class="settings-key-status" id="key-status"></div>
+        <button class="btn-primary" id="btn-save-key">Save Key</button>
+        <div class="settings-note">
+          Your key is encrypted on this device using Windows DPAPI and never leaves your machine except to call Groq's transcription and analysis APIs.<br><br>
+          <strong>Note:</strong> If you reinstall Windows, you'll need to re-enter your key.
+        </div>
+      </div>
+
+      <!-- ── Google OAuth ─────────────────────────────────────────────────── -->
+      <div class="settings-section">
+        <div class="settings-section-label">Google Account</div>
+        <div class="settings-key-row">
+          <input id="settings-google-client-id" class="form-input" type="text" placeholder="Google OAuth Client ID" />
+        </div>
+        <div class="settings-key-row" style="margin-top:8px">
+          <input id="settings-google-client-secret" class="form-input" type="password" placeholder="Google OAuth Client Secret" />
+          <button class="btn-ghost btn-small" id="btn-toggle-google-secret">Show</button>
+        </div>
+        <div class="integration-status-row">
+          <div class="integration-status" id="google-status">Not connected</div>
+        </div>
+        <div style="display:flex;gap:8px;margin-top:12px">
+          <button class="btn-primary" id="btn-google-connect">Connect Google</button>
+          <button class="btn-ghost" id="btn-google-disconnect">Disconnect</button>
+        </div>
+        <div class="settings-note">
+          Create a "Desktop app" OAuth credential in Google Cloud Console. Scopes needed: Drive, Docs, Calendar Events. Credentials are encrypted on this device using Windows DPAPI.
+        </div>
+      </div>
+
+      <!-- ── Google Drive ─────────────────────────────────────────────────── -->
+      <div class="settings-section">
+        <div class="settings-section-label">Google Drive</div>
+        <div class="settings-key-row">
+          <input id="settings-drive-proposal-template" class="form-input" type="text" placeholder="Proposal Template Doc ID" />
+        </div>
+        <div class="settings-key-row" style="margin-top:8px">
+          <input id="settings-drive-notes-template" class="form-input" type="text" placeholder="Meeting Notes Template Doc ID" />
+        </div>
+        <div class="settings-key-row" style="margin-top:8px">
+          <input id="settings-drive-folder" class="form-input" type="text" placeholder="Target Drive Folder ID" />
+        </div>
+      </div>
+
+      <!-- ── ClickUp ──────────────────────────────────────────────────────── -->
+      <div class="settings-section">
+        <div class="settings-section-label">ClickUp</div>
+        <div class="settings-key-row">
+          <input id="settings-clickup-key" class="form-input" type="password" placeholder="ClickUp API Key (pk_…)" />
+          <button class="btn-ghost btn-small" id="btn-toggle-clickup-key">Show</button>
+        </div>
+        <div class="settings-key-row" style="margin-top:8px">
+          <input id="settings-clickup-list" class="form-input" type="text" placeholder="ClickUp List ID" />
+        </div>
+        <div class="settings-key-status" id="clickup-key-status"></div>
+        <button class="btn-primary" id="btn-save-integrations" style="margin-top:12px">Save Integration Settings</button>
+      </div>
+    </div>
+  </div>
+
+</body>
+</html>
