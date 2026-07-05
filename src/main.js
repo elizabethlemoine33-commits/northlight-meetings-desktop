@@ -2,6 +2,13 @@ const { app, BrowserWindow, ipcMain, safeStorage, Menu, dialog } = require('elec
 const path = require('node:path');
 const fs = require('fs');
 const { analyzeTranscript } = require('./analysis');
+const { init: sentryInit, captureException } = require('@sentry/electron/main');
+
+// Replace YOUR_SENTRY_DSN with the DSN from sentry.io → your Meetings project → Settings → Client Keys
+sentryInit({
+  dsn: 'https://e0a35240b3eb86faf9f387edf3613f65@o4511405360087040.ingest.de.sentry.io/4511683630071888',
+  environment: app.isPackaged ? 'production' : 'development',
+});
 
 if (require('electron-squirrel-startup')) app.quit();
 

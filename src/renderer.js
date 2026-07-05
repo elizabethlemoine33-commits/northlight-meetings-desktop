@@ -1,4 +1,7 @@
 import './index.css';
+import * as Sentry from '@sentry/electron/renderer';
+
+Sentry.init({ dsn: 'https://e0a35240b3eb86faf9f387edf3613f65@o4511405360087040.ingest.de.sentry.io/4511683630071888' });
 
 // ── State ─────────────────────────────────────────────────────────────────────
 let currentScreen = 'home';
