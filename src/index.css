@@ -75,6 +75,45 @@ html, body {
 }
 .btn-icon:hover { color: var(--cloud); background: var(--border); }
 
+/* ── Setup Banner ─────────────────────────────────────────────────────────── */
+.setup-banner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0 16px 4px;
+  padding: 10px 14px;
+  background: rgba(139, 111, 212, 0.10);
+  border: 1px solid rgba(139, 111, 212, 0.30);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.setup-banner.hidden { display: none; }
+.setup-banner-text { flex: 1; color: #BCC2DC; line-height: 1.5; }
+.setup-banner-text strong { color: #fff; }
+.setup-banner-go {
+  flex-shrink: 0;
+  background: rgba(139, 111, 212, 0.25);
+  border: 1px solid rgba(139, 111, 212, 0.5);
+  border-radius: 6px;
+  color: #C8CCE0;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 5px 12px;
+  cursor: pointer;
+}
+.setup-banner-go:hover { background: rgba(139, 111, 212, 0.4); }
+.setup-banner-dismiss {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  color: #6C7295;
+  font-size: 13px;
+  cursor: pointer;
+  padding: 2px 4px;
+  line-height: 1;
+}
+.setup-banner-dismiss:hover { color: #99A1B6; }
+
 /* ── Home CTA ─────────────────────────────────────────────────────────────── */
 .home-cta {
   padding: 20px 24px 8px;

@@ -258,9 +258,9 @@ ipcMain.handle('save-integration-config', (_e, cfg) => { saveIntegrationConfig(c
 ipcMain.handle('get-integration-config', () => loadIntegrationConfig());
 
 // ── Google OAuth ──────────────────────────────────────────────────────────────
-ipcMain.handle('google-oauth-begin', async (_e, { clientId, clientSecret }) => {
+ipcMain.handle('google-oauth-begin', async () => {
   const { beginOAuth } = require('./google-oauth');
-  return beginOAuth(clientId, clientSecret);
+  return beginOAuth();
 });
 
 ipcMain.handle('google-oauth-status', () => {

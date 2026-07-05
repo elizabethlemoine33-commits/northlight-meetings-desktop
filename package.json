@@ -30,6 +30,7 @@
     "@electron/fuses": "^1.8.0",
     "@vercel/webpack-asset-relocator-loader": "^1.7.3",
     "css-loader": "^6.11.0",
+    "dotenv": "^17.4.2",
     "electron": "43.0.0",
     "node-loader": "^2.1.0",
     "png-to-ico": "^3.0.1",

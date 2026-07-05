@@ -6,6 +6,11 @@ const { randomBytes } = require('node:crypto');
 
 const GOOGLE_AUTH_URL = 'https://accounts.google.com/o/oauth2/v2/auth';
 const GOOGLE_TOKEN_URL = 'https://oauth2.googleapis.com/token';
+
+// Injected at build time by webpack DefinePlugin — set GOOGLE_CLIENT_ID and
+// GOOGLE_CLIENT_SECRET in your .env file before building.
+/* global GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET */
+
 const SCOPES = [
   'https://www.googleapis.com/auth/drive',
   'https://www.googleapis.com/auth/documents',
@@ -75,8 +80,6 @@ function clearTokens() {
 }
 
 async function getValidAccessToken() {
-  const creds = loadCreds();
-  if (!creds) return null;
   const tokens = loadTokens();
   if (!tokens?.refresh_token) return null;
 
@@ -93,8 +96,8 @@ async function getValidAccessToken() {
       body: new URLSearchParams({
         grant_type: 'refresh_token',
         refresh_token: tokens.refresh_token,
-        client_id: creds.clientId,
-        client_secret: creds.clientSecret,
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
       }),
     });
     if (!res.ok) return null;
@@ -108,9 +111,7 @@ async function getValidAccessToken() {
   } catch { return null; }
 }
 
-function beginOAuth(clientId, clientSecret) {
-  storeCreds(clientId, clientSecret);
-
+function beginOAuth() {
   return new Promise((resolve, reject) => {
     const state = randomBytes(16).toString('hex');
     let port;
@@ -149,8 +150,8 @@ function beginOAuth(clientId, clientSecret) {
           headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: new URLSearchParams({
             code,
-            client_id: clientId,
-            client_secret: clientSecret,
+            client_id: GOOGLE_CLIENT_ID,
+            client_secret: GOOGLE_CLIENT_SECRET,
             redirect_uri: `http://localhost:${port}/callback`,
             grant_type: 'authorization_code',
           }),
@@ -173,7 +174,7 @@ function beginOAuth(clientId, clientSecret) {
     callbackServer.listen(0, '127.0.0.1', () => {
       port = callbackServer.address().port;
       const params = new URLSearchParams({
-        client_id: clientId,
+        client_id: GOOGLE_CLIENT_ID,
         redirect_uri: `http://localhost:${port}/callback`,
         response_type: 'code',
         scope: SCOPES,
@@ -188,4 +189,4 @@ function beginOAuth(clientId, clientSecret) {
   });
 }
 
-module.exports = { beginOAuth, getValidAccessToken, isConnected, clearTokens, loadCreds, storeCreds };
+module.exports = { beginOAuth, getValidAccessToken, isConnected, clearTokens };

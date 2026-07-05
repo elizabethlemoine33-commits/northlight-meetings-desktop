@@ -14,6 +14,12 @@
       <button class="btn-icon" id="btn-settings-home" title="Settings">⚙</button>
     </div>
 
+    <div id="setup-banner" class="setup-banner hidden">
+      <span class="setup-banner-text">Welcome — open <strong>Settings</strong> to add your Groq API key and connect Google before your first recording.</span>
+      <button class="setup-banner-go" id="btn-banner-settings">Go to Settings</button>
+      <button class="setup-banner-dismiss" id="btn-banner-dismiss" title="Dismiss">✕</button>
+    </div>
+
     <div class="home-cta">
       <button class="btn-primary btn-large" id="btn-new-session">+ New Session</button>
     </div>
@@ -236,13 +242,6 @@
       <!-- ── Google OAuth ─────────────────────────────────────────────────── -->
       <div class="settings-section">
         <div class="settings-section-label">Google Account</div>
-        <div class="settings-key-row">
-          <input id="settings-google-client-id" class="form-input" type="text" placeholder="Google OAuth Client ID" />
-        </div>
-        <div class="settings-key-row" style="margin-top:8px">
-          <input id="settings-google-client-secret" class="form-input" type="password" placeholder="Google OAuth Client Secret" />
-          <button class="btn-ghost btn-small" id="btn-toggle-google-secret">Show</button>
-        </div>
         <div class="integration-status-row">
           <div class="integration-status" id="google-status">Not connected</div>
         </div>
@@ -251,7 +250,7 @@
           <button class="btn-ghost" id="btn-google-disconnect">Disconnect</button>
         </div>
         <div class="settings-note">
-          Create a "Desktop app" OAuth credential in Google Cloud Console. Scopes needed: Drive, Docs, Calendar Events. Credentials are encrypted on this device using Windows DPAPI.
+          Connects to Google Drive, Docs, and Calendar. Your OAuth tokens are encrypted on this device using Windows DPAPI and never shared with Northlight.
         </div>
       </div>
 

@@ -984,12 +984,6 @@ async function loadSettings() {
     status.className = 'settings-key-status status-none';
   }
 
-  // Load Google creds (client ID shown plaintext, secret masked)
-  const creds = await window.electronAPI.getGoogleCreds();
-  if (creds) {
-    document.getElementById('settings-google-client-id').value = creds.clientId || '';
-    document.getElementById('settings-google-client-secret').value = creds.clientSecret || '';
-  }
   updateGoogleStatus(googleConnected);
 
   // Drive + ClickUp config
@@ -1020,6 +1014,26 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-settings-home').addEventListener('click', async () => {
     await loadSettings();
     showScreen('settings');
+  });
+
+  // Setup banner — show if Groq key missing and not already dismissed this session
+  (async () => {
+    const hasKey = await window.electronAPI.hasApiKey();
+    const dismissed = sessionStorage.getItem('setup-banner-dismissed');
+    if (!hasKey && !dismissed) {
+      document.getElementById('setup-banner').classList.remove('hidden');
+    }
+  })();
+
+  document.getElementById('btn-banner-settings').addEventListener('click', async () => {
+    document.getElementById('setup-banner').classList.add('hidden');
+    await loadSettings();
+    showScreen('settings');
+  });
+
+  document.getElementById('btn-banner-dismiss').addEventListener('click', () => {
+    sessionStorage.setItem('setup-banner-dismissed', '1');
+    document.getElementById('setup-banner').classList.add('hidden');
   });
 
   // Pre-call
@@ -1121,13 +1135,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     status.className = 'settings-key-status status-saved';
   });
 
-  // Google OAuth secret show/hide
-  document.getElementById('btn-toggle-google-secret').addEventListener('click', () => {
-    const inp = document.getElementById('settings-google-client-secret');
-    const btn = document.getElementById('btn-toggle-google-secret');
-    if (inp.type === 'password') { inp.type = 'text'; btn.textContent = 'Hide'; }
-    else { inp.type = 'password'; btn.textContent = 'Show'; }
-  });
+
 
   // ClickUp key show/hide
   document.getElementById('btn-toggle-clickup-key').addEventListener('click', () => {
@@ -1139,17 +1147,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Connect Google
   document.getElementById('btn-google-connect').addEventListener('click', async () => {
-    const clientId = document.getElementById('settings-google-client-id').value.trim();
-    const clientSecret = document.getElementById('settings-google-client-secret').value.trim();
-    if (!clientId || !clientSecret) {
-      alert('Enter your Google OAuth Client ID and Client Secret first.');
-      return;
-    }
     const btn = document.getElementById('btn-google-connect');
     btn.disabled = true;
     btn.textContent = 'Opening browser…';
     try {
-      await window.electronAPI.googleOAuthBegin({ clientId, clientSecret });
+      await window.electronAPI.googleOAuthBegin();
       await updateGoogleStatus(true);
     } catch (err) {
       alert('Google connect failed: ' + err.message);
