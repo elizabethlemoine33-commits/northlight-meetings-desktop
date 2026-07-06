@@ -281,6 +281,31 @@
         <div class="settings-key-status" id="clickup-key-status"></div>
         <button class="btn-primary" id="btn-save-integrations" style="margin-top:12px">Save Integration Settings</button>
       </div>
+
+      <!-- ── Recording Reminders ─────────────────────────────────────────── -->
+      <div class="settings-section">
+        <div class="settings-section-label">Recording Reminders</div>
+        <label class="settings-toggle-row">
+          <input type="checkbox" id="toggle-consent-reminder" class="settings-toggle-checkbox" />
+          <span class="settings-toggle-label">Remind me to announce recording before each call</span>
+        </label>
+        <div class="settings-note">When enabled, a dismissible banner appears before recording starts asking you to confirm that call participants have been notified.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── CONSENT BANNER OVERLAY ─────────────────────────────────────────── -->
+  <div id="consent-banner" class="consent-banner hidden">
+    <div class="consent-banner-inner">
+      <div class="consent-banner-icon">🎙</div>
+      <div class="consent-banner-text">
+        <strong>Recording will begin when you press Start.</strong><br>
+        Have you announced this to call participants?
+      </div>
+      <div class="consent-banner-actions">
+        <button class="btn-primary" id="btn-consent-proceed">Yes — Start Recording</button>
+        <button class="btn-ghost" id="btn-consent-dismiss">Dismiss</button>
+      </div>
     </div>
   </div>
 

@@ -994,6 +994,9 @@ async function loadSettings() {
     document.getElementById('settings-clickup-list').value = cfg.clickupListId || '';
   }
   if (cuKey) document.getElementById('settings-clickup-key').value = cuKey;
+
+  const consentToggle = document.getElementById('toggle-consent-reminder');
+  consentToggle.checked = localStorage.getItem('consentReminderEnabled') === 'true';
 }
 
 // ── Wire Up Events ─────────────────────────────────────────────────────────────
@@ -1053,7 +1056,28 @@ document.addEventListener('DOMContentLoaded', async () => {
     showScreen('settings');
   });
 
-  document.getElementById('btn-start-recording').addEventListener('click', startRecording);
+  document.getElementById('btn-start-recording').addEventListener('click', () => {
+    const consentEnabled = localStorage.getItem('consentReminderEnabled') === 'true';
+    if (consentEnabled) {
+      document.getElementById('consent-banner').classList.remove('hidden');
+    } else {
+      startRecording();
+    }
+  });
+
+  document.getElementById('btn-consent-proceed').addEventListener('click', () => {
+    document.getElementById('consent-banner').classList.add('hidden');
+    startRecording();
+  });
+
+  document.getElementById('btn-consent-dismiss').addEventListener('click', () => {
+    document.getElementById('consent-banner').classList.add('hidden');
+    startRecording();
+  });
+
+  document.getElementById('toggle-consent-reminder').addEventListener('change', (e) => {
+    localStorage.setItem('consentReminderEnabled', e.target.checked ? 'true' : 'false');
+  });
 
   // Recording
   document.getElementById('btn-stop-recording').addEventListener('click', stopRecording);
