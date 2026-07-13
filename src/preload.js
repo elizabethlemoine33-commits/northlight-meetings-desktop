@@ -36,6 +36,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   pushClickup: (params) => ipcRenderer.invoke('push-clickup', params),
   pushCalendar: (params) => ipcRenderer.invoke('push-calendar', params),
 
+  // Audio setup
+  checkAudio: () => ipcRenderer.invoke('check-audio'),
+  fixAudio: () => ipcRenderer.invoke('fix-audio'),
+
   // Navigation from main menu
   onNavigate: (callback) => ipcRenderer.on('navigate', (_e, screen) => callback(screen)),
 });

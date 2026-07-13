@@ -75,6 +75,16 @@
         ⚠ No Groq API key found. <button class="btn-link" id="btn-go-settings-from-warning">Open Settings</button> to add your key before recording.
       </div>
 
+      <div id="audio-check-strip" class="audio-check-strip">
+        <div class="audio-check-row">
+          <span class="audio-check-icon" id="audio-check-icon">○</span>
+          <span class="audio-check-label" id="audio-check-label">Checking audio setup…</span>
+          <button class="btn-link audio-check-fix hidden" id="btn-audio-fix">Fix</button>
+          <button class="btn-link audio-check-recheck" id="btn-audio-recheck">↺</button>
+        </div>
+        <div class="audio-check-detail hidden" id="audio-check-detail"></div>
+      </div>
+
       <button class="btn-primary btn-large" id="btn-start-recording" disabled>
         Start Recording
       </button>

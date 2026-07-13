@@ -1012,6 +1012,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('btn-start-recording').disabled = true;
     document.getElementById('no-key-warning').classList.toggle('hidden', hasKey);
     showScreen('precall');
+    runAudioCheck();
   });
 
   document.getElementById('btn-settings-home').addEventListener('click', async () => {
@@ -1041,6 +1042,60 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Pre-call
   document.getElementById('btn-back-precall').addEventListener('click', () => showScreen('home'));
+
+  // ── Audio setup check ────────────────────────────────────────────────────
+  async function runAudioCheck() {
+    const icon  = document.getElementById('audio-check-icon');
+    const label = document.getElementById('audio-check-label');
+    const fix   = document.getElementById('btn-audio-fix');
+    const detail = document.getElementById('audio-check-detail');
+
+    icon.className = 'audio-check-icon';
+    icon.textContent = '○';
+    label.textContent = 'Checking audio setup…';
+    fix.classList.add('hidden');
+    detail.classList.add('hidden');
+
+    const result = await window.electronAPI.checkAudio();
+
+    if (result.error) {
+      icon.className = 'audio-check-icon warn';
+      icon.textContent = '⚠';
+      label.textContent = 'Could not check audio devices';
+      return;
+    }
+
+    const realtekOk = result.IsRealtekDefault;
+    const cableOk   = result.CableOutputAvailable;
+
+    if (realtekOk && cableOk) {
+      icon.className = 'audio-check-icon ok';
+      icon.textContent = '✓';
+      label.textContent = 'Audio ready — Realtek speakers active, VB-Cable available';
+    } else if (!realtekOk) {
+      icon.className = 'audio-check-icon warn';
+      icon.textContent = '⚠';
+      label.textContent = `Wrong speaker active: ${result.DefaultPlayback}`;
+      detail.textContent = 'Realtek speakers should be the default. Press Fix to correct it — Chrome audio will work normally after.';
+      detail.classList.remove('hidden');
+      fix.classList.remove('hidden');
+    } else {
+      icon.className = 'audio-check-icon warn';
+      icon.textContent = '⚠';
+      label.textContent = 'VB-Audio Cable not detected';
+      detail.textContent = 'CABLE Output device not found. Make sure VB-Audio Cable is installed.';
+      detail.classList.remove('hidden');
+    }
+  }
+
+  document.getElementById('btn-audio-recheck').addEventListener('click', runAudioCheck);
+
+  document.getElementById('btn-audio-fix').addEventListener('click', async () => {
+    document.getElementById('audio-check-label').textContent = 'Fixing…';
+    document.getElementById('btn-audio-fix').classList.add('hidden');
+    await window.electronAPI.fixAudio();
+    runAudioCheck();
+  });
 
   document.querySelectorAll('.mode-btn').forEach(btn => {
     btn.addEventListener('click', () => {

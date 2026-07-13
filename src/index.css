@@ -597,6 +597,31 @@ html, body {
   padding-top: 12px;
 }
 
+/* ── Audio Check Strip ───────────────────────────────────────────────────── */
+.audio-check-strip {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+}
+.audio-check-row {
+  display: flex; align-items: center; gap: 8px;
+}
+.audio-check-icon { font-size: 13px; flex-shrink: 0; }
+.audio-check-icon.ok    { color: var(--green); }
+.audio-check-icon.warn  { color: var(--yellow); }
+.audio-check-icon.error { color: var(--red); }
+.audio-check-label { font-size: 12px; color: var(--muted); flex: 1; }
+.audio-check-fix   { font-size: 11px; color: var(--boreal); }
+.audio-check-recheck { font-size: 13px; color: var(--structural); margin-left: 2px; }
+.audio-check-detail {
+  margin-top: 6px;
+  font-size: 11px;
+  color: var(--structural);
+  line-height: 1.5;
+}
+
 /* ── Settings Toggle ─────────────────────────────────────────────────────── */
 .settings-toggle-row {
   display: flex;

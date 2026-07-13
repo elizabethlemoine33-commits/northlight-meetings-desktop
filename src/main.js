@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, safeStorage, Menu, dialog } = require('electron');
 const path = require('node:path');
 const fs = require('fs');
+const { execSync } = require('child_process');
 const { analyzeTranscript } = require('./analysis');
 const { init: sentryInit, captureException } = require('@sentry/electron/main');
 
@@ -158,6 +159,40 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') app.quit();
 });
+
+// ── Audio Setup Check ─────────────────────────────────────────────────────────
+function checkAudioSetup() {
+  try {
+    const ps = `
+Import-Module AudioDeviceCmdlets -ErrorAction Stop
+$play = Get-AudioDevice -Playback
+$recList = Get-AudioDevice -List | Where-Object { $_.Type -eq 'Recording' }
+$cableOut = $recList | Where-Object { $_.Name -like '*CABLE Output*' }
+[PSCustomObject]@{
+  DefaultPlayback = $play.Name
+  IsRealtekDefault = ($play.Name -like '*Realtek*')
+  CableOutputAvailable = ($null -ne $cableOut)
+} | ConvertTo-Json
+`.trim();
+    const raw = execSync(`powershell -NonInteractive -Command "${ps.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`, { timeout: 8000 }).toString().trim();
+    return JSON.parse(raw);
+  } catch {
+    return { DefaultPlayback: 'Unknown', IsRealtekDefault: false, CableOutputAvailable: false, error: true };
+  }
+}
+
+function fixAudioSetup() {
+  try {
+    const ps = `Import-Module AudioDeviceCmdlets -ErrorAction Stop; $idx = (Get-AudioDevice -List | Where-Object { $_.Type -eq 'Playback' -and $_.Name -like '*Realtek*Speakers*' } | Select-Object -First 1).Index; if ($idx) { Set-AudioDevice -Index $idx }; $idx`;
+    const out = execSync(`powershell -NonInteractive -Command "${ps}"`, { timeout: 8000 }).toString().trim();
+    return { fixed: !!out };
+  } catch {
+    return { fixed: false };
+  }
+}
+
+ipcMain.handle('check-audio', () => checkAudioSetup());
+ipcMain.handle('fix-audio', () => fixAudioSetup());
 
 // ── IPC Handlers ──────────────────────────────────────────────────────────────
 ipcMain.handle('save-api-key', (_e, key) => { saveApiKey(key); return true; });
