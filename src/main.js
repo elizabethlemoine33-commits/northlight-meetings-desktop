@@ -161,20 +161,16 @@ app.on('window-all-closed', () => {
 });
 
 // ── Audio Setup Check ─────────────────────────────────────────────────────────
+const AUDIO_MODULE = 'C:\\Users\\erand\\Documents\\WindowsPowerShell\\Modules\\AudioDeviceCmdlets\\3.1.0.2\\AudioDeviceCmdlets.dll';
+
+function runPS(script) {
+  const wrapped = `Import-Module '${AUDIO_MODULE}' -ErrorAction Stop; ${script}`;
+  return execSync(`powershell -NonInteractive -Command "${wrapped.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`, { timeout: 8000 }).toString().trim();
+}
+
 function checkAudioSetup() {
   try {
-    const ps = `
-Import-Module AudioDeviceCmdlets -ErrorAction Stop
-$play = Get-AudioDevice -Playback
-$recList = Get-AudioDevice -List | Where-Object { $_.Type -eq 'Recording' }
-$cableOut = $recList | Where-Object { $_.Name -like '*CABLE Output*' }
-[PSCustomObject]@{
-  DefaultPlayback = $play.Name
-  IsRealtekDefault = ($play.Name -like '*Realtek*')
-  CableOutputAvailable = ($null -ne $cableOut)
-} | ConvertTo-Json
-`.trim();
-    const raw = execSync(`powershell -NonInteractive -Command "${ps.replace(/"/g, '\\"').replace(/\n/g, ' ')}"`, { timeout: 8000 }).toString().trim();
+    const raw = runPS(`$play = Get-AudioDevice -Playback; $cableOut = Get-AudioDevice -List | Where-Object { $_.Type -eq 'Recording' -and $_.Name -like '*CABLE Output*' }; [PSCustomObject]@{ DefaultPlayback = $play.Name; IsRealtekDefault = ($play.Name -like '*Realtek*'); CableOutputAvailable = ($null -ne $cableOut) } | ConvertTo-Json`);
     return JSON.parse(raw);
   } catch {
     return { DefaultPlayback: 'Unknown', IsRealtekDefault: false, CableOutputAvailable: false, error: true };
@@ -183,8 +179,7 @@ $cableOut = $recList | Where-Object { $_.Name -like '*CABLE Output*' }
 
 function fixAudioSetup() {
   try {
-    const ps = `Import-Module AudioDeviceCmdlets -ErrorAction Stop; $idx = (Get-AudioDevice -List | Where-Object { $_.Type -eq 'Playback' -and $_.Name -like '*Realtek*Speakers*' } | Select-Object -First 1).Index; if ($idx) { Set-AudioDevice -Index $idx }; $idx`;
-    const out = execSync(`powershell -NonInteractive -Command "${ps}"`, { timeout: 8000 }).toString().trim();
+    const out = runPS(`$idx = (Get-AudioDevice -List | Where-Object { $_.Type -eq 'Playback' -and $_.Name -like '*Realtek*' } | Select-Object -First 1).Index; if ($idx) { Set-AudioDevice -Index $idx }; $idx`);
     return { fixed: !!out };
   } catch {
     return { fixed: false };
