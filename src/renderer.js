@@ -995,8 +995,6 @@ async function loadSettings() {
   }
   if (cuKey) document.getElementById('settings-clickup-key').value = cuKey;
 
-  const consentToggle = document.getElementById('toggle-consent-reminder');
-  consentToggle.checked = localStorage.getItem('consentReminderEnabled') === 'true';
 }
 
 // ── Wire Up Events ─────────────────────────────────────────────────────────────
@@ -1112,12 +1110,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   document.getElementById('btn-start-recording').addEventListener('click', () => {
-    const consentEnabled = localStorage.getItem('consentReminderEnabled') === 'true';
-    if (consentEnabled) {
-      document.getElementById('consent-banner').classList.remove('hidden');
-    } else {
-      startRecording();
-    }
+    document.getElementById('consent-banner').classList.remove('hidden');
   });
 
   document.getElementById('btn-consent-proceed').addEventListener('click', () => {
@@ -1128,10 +1121,6 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-consent-dismiss').addEventListener('click', () => {
     document.getElementById('consent-banner').classList.add('hidden');
     startRecording();
-  });
-
-  document.getElementById('toggle-consent-reminder').addEventListener('change', (e) => {
-    localStorage.setItem('consentReminderEnabled', e.target.checked ? 'true' : 'false');
   });
 
   // Recording
