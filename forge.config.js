@@ -5,6 +5,7 @@ module.exports = {
   packagerConfig: {
     asar: true,
     icon: './resources/icon',
+    extraResource: ['./resources/AudioDeviceCmdlets'],
   },
   rebuildConfig: {},
   makers: [

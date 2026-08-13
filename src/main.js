@@ -161,7 +161,10 @@ app.on('window-all-closed', () => {
 });
 
 // ── Audio Setup Check ─────────────────────────────────────────────────────────
-const AUDIO_MODULE = 'C:\\Users\\erand\\Documents\\WindowsPowerShell\\Modules\\AudioDeviceCmdlets\\3.1.0.2\\AudioDeviceCmdlets.dll';
+const AUDIO_MODULE = path.join(
+  app.isPackaged ? process.resourcesPath : path.join(app.getAppPath(), '..', '..', 'resources'),
+  'AudioDeviceCmdlets', 'AudioDeviceCmdlets.dll'
+);
 
 function runPS(script) {
   const wrapped = `Import-Module '${AUDIO_MODULE}' -ErrorAction Stop; ${script}`;
