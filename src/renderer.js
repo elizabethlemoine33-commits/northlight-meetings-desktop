@@ -1270,5 +1270,30 @@ document.addEventListener('DOMContentLoaded', async () => {
   });
 
   await loadSessionList();
-  showScreen('home');
+
+  // ── VB-Audio first-run gate ───────────────────────────────────────────────
+  document.getElementById('btn-vbaudio-download').addEventListener('click', (e) => {
+    e.preventDefault();
+    window.electronAPI.openExternal('https://vb-audio.com/Cable/');
+  });
+
+  document.getElementById('btn-vbaudio-recheck').addEventListener('click', async () => {
+    const btn = document.getElementById('btn-vbaudio-recheck');
+    btn.disabled = true;
+    btn.textContent = 'Checking…';
+    const result = await window.electronAPI.checkAudio();
+    if (result.CableOutputAvailable) {
+      showScreen('home');
+    } else {
+      btn.textContent = 'Not detected — try restarting your computer, then check again';
+      btn.disabled = false;
+    }
+  });
+
+  const audioResult = await window.electronAPI.checkAudio();
+  if (!audioResult.CableOutputAvailable && !audioResult.error) {
+    showScreen('vbaudio-setup');
+  } else {
+    showScreen('home');
+  }
 });

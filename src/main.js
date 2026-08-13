@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, safeStorage, Menu, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain, safeStorage, Menu, dialog, shell } = require('electron');
 const path = require('node:path');
 const fs = require('fs');
 const { execSync } = require('child_process');
@@ -191,6 +191,7 @@ function fixAudioSetup() {
 
 ipcMain.handle('check-audio', () => checkAudioSetup());
 ipcMain.handle('fix-audio', () => fixAudioSetup());
+ipcMain.handle('open-external', (_e, url) => { shell.openExternal(url); });
 
 // ── IPC Handlers ──────────────────────────────────────────────────────────────
 ipcMain.handle('save-api-key', (_e, key) => { saveApiKey(key); return true; });

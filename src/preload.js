@@ -42,4 +42,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Navigation from main menu
   onNavigate: (callback) => ipcRenderer.on('navigate', (_e, screen) => callback(screen)),
+
+  // Open external URL in default browser
+  openExternal: (url) => ipcRenderer.invoke('open-external', url),
 });

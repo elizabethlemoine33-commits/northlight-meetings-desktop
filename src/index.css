@@ -1129,6 +1129,86 @@ html, body {
   color: var(--green);
 }
 
+/* ── VB-Audio Setup Screen ────────────────────────────────────────────────── */
+.vbaudio-setup-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 24px;
+}
+.vbaudio-setup-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 40px 48px;
+  max-width: 520px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.vbaudio-setup-icon { font-size: 40px; margin-bottom: 20px; }
+.vbaudio-setup-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 12px;
+  letter-spacing: 0.02em;
+}
+.vbaudio-setup-desc {
+  font-size: 14px;
+  color: var(--cloud);
+  line-height: 1.7;
+  margin-bottom: 28px;
+}
+.vbaudio-setup-desc strong { color: var(--text); }
+.vbaudio-steps {
+  width: 100%;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.vbaudio-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  font-size: 13px;
+  color: var(--cloud);
+  line-height: 1.6;
+}
+.vbaudio-step-num {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: rgba(79, 195, 200, 0.15);
+  border: 1px solid rgba(79, 195, 200, 0.4);
+  color: var(--glacial);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.vbaudio-step strong { color: var(--haze); }
+.btn-vbaudio-download {
+  width: 100%;
+  text-align: center;
+  text-decoration: none;
+  display: block;
+}
+.vbaudio-note {
+  margin-top: 20px;
+  font-size: 11px;
+  color: var(--structural);
+  line-height: 1.6;
+}
+.vbaudio-note strong { color: var(--muted); font-weight: 500; }
+
 /* ── Scrollbar ────────────────────────────────────────────────────────────── */
 ::-webkit-scrollbar { width: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
