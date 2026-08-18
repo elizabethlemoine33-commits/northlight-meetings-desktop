@@ -142,7 +142,7 @@ async function analyzeTranscript({ transcript, feedback, mode, title, clientName
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: 'openai/gpt-oss-120b',
         messages: [
           { role: 'system', content: 'Return only raw JSON. No markdown, no explanation.' },
           { role: 'user', content: prompt },

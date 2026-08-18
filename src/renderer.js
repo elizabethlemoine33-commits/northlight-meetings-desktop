@@ -53,6 +53,7 @@ const ERROR_MESSAGES = {
   'file-large':  { title: 'Recording Too Large',   msg: 'The recording file exceeded Groq\'s 25 MB limit. This shouldn\'t happen for normal calls — please report it.' },
   'timeout':     { title: 'Request Timed Out',     msg: 'Groq took longer than 2 minutes to respond. This may be a temporary issue — try again.' },
   'network':     { title: 'Network Error',         msg: 'Can\'t reach Groq. Check your internet connection and try again.' },
+  'model-not-found': { title: 'AI Model Unavailable', msg: 'The AI model configured in this app no longer exists on Groq. Please update the app.' },
   'generic':     { title: 'Processing Failed',     msg: 'Something went wrong. Try again, or check your Settings if the issue persists.' },
 };
 
@@ -63,6 +64,7 @@ function classifyError(err) {
   if (status === 429) return 'rate-limit';
   if (status === 413) return 'file-large';
   if (err.message === 'timeout' || status === 0) return 'timeout';
+  if (status === 404 && err.message?.includes('does not exist')) return 'model-not-found';
   if (err.message?.toLowerCase().includes('network') || err.message?.toLowerCase().includes('fetch')) return 'network';
   return 'generic';
 }
@@ -523,6 +525,8 @@ async function startProcessing() {
 
       mainTranscript = mainTx;
       feedbackTranscript = feedbackTx;
+
+      window.electronAPI.saveTranscriptDraft(mainTranscript).catch(() => {});
 
       setProcessingStage('analysing');
 

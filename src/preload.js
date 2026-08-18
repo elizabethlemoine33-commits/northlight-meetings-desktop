@@ -8,6 +8,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
 
   // Transcription + Analysis
   transcribe: (arrayBuffer, mimeType) => ipcRenderer.invoke('transcribe', arrayBuffer, mimeType),
+  saveTranscriptDraft: (text) => ipcRenderer.invoke('save-transcript-draft', text),
   analyze: (params) => ipcRenderer.invoke('analyze', params),
 
   // Sessions

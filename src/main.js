@@ -225,6 +225,12 @@ ipcMain.handle('delete-session', (_e, id) => {
   return true;
 });
 
+ipcMain.handle('save-transcript-draft', (_e, text) => {
+  const p = path.join(app.getPath('userData'), 'transcript-draft.txt');
+  fs.writeFileSync(p, text, 'utf8');
+  return p;
+});
+
 ipcMain.handle('analyze', async (_e, params) => {
   const apiKey = loadApiKey();
   if (!apiKey) {
