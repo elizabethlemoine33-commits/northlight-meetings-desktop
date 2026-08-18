@@ -142,6 +142,8 @@ function createWindow() {
             detail: 'Phase 1 — Recording + Transcription\nTranscription powered by Groq Whisper.',
           });
         }},
+        { type: 'separator' },
+        { label: 'Open Developer Tools', accelerator: 'F12', click: () => mainWindow.webContents.openDevTools() },
       ],
     },
   ]);
