@@ -87,6 +87,7 @@ async function pushToClickup({ session, listId, clickupApiKey }) {
   const priorityMap = { urgent: 1, high: 2, normal: 3, low: 4 };
   const tasks = (session.analysis?.clickupTasks || []).filter(t => t.approved);
   const urls = [];
+  const errors = [];
 
   for (const task of tasks) {
     try {
@@ -100,12 +101,15 @@ async function pushToClickup({ session, listId, clickupApiKey }) {
         headers: { Authorization: clickupApiKey, 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
       });
+      if (!res.ok) throw new Error(`ClickUp API returned ${res.status}`);
       const data = await res.json();
       if (data.url) urls.push(data.url);
-    } catch {}
+    } catch (err) {
+      errors.push(err.message || 'Unknown error');
+    }
   }
 
-  return { taskCount: urls.length, urls };
+  return { taskCount: urls.length, urls, errors };
 }
 
 // ── Calendar push ─────────────────────────────────────────────────────────────
@@ -114,37 +118,49 @@ async function pushToCalendar({ session, accessToken }) {
   const urls = [];
   const sessionLabel = [session.client_name, session.project_name].filter(Boolean).join(' — ');
 
+  const errors = [];
+
   for (const date of dates) {
     try {
       const isDateOnly = !date.isoDate.includes('T');
       const start = new Date(date.isoDate);
       const description = `From: ${sessionLabel}\n\n"${date.dateText}"`;
 
-      const eventBody = isDateOnly
-        ? {
-            summary: date.description,
-            description,
-            start: { date: date.isoDate.substring(0, 10) },
-            end: { date: date.isoDate.substring(0, 10) },
-          }
-        : {
-            summary: date.description,
-            description,
-            start: { dateTime: start.toISOString() },
-            end: { dateTime: new Date(start.getTime() + 60 * 60 * 1000).toISOString() },
-          };
+      let eventBody;
+      if (isDateOnly) {
+        const startDateStr = date.isoDate.substring(0, 10);
+        const endDateObj = new Date(startDateStr + 'T00:00:00');
+        endDateObj.setDate(endDateObj.getDate() + 1);
+        const endDateStr = endDateObj.toISOString().substring(0, 10);
+        eventBody = {
+          summary: date.description,
+          description,
+          start: { date: startDateStr },
+          end: { date: endDateStr },
+        };
+      } else {
+        eventBody = {
+          summary: date.description,
+          description,
+          start: { dateTime: start.toISOString() },
+          end: { dateTime: new Date(start.getTime() + 60 * 60 * 1000).toISOString() },
+        };
+      }
 
       const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
         method: 'POST',
         headers: { Authorization: `Bearer ${accessToken}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(eventBody),
       });
+      if (!res.ok) throw new Error(`Calendar API returned ${res.status}`);
       const data = await res.json();
       if (data.htmlLink) urls.push(data.htmlLink);
-    } catch {}
+    } catch (err) {
+      errors.push(err.message || 'Unknown error');
+    }
   }
 
-  return { eventCount: urls.length, urls };
+  return { eventCount: urls.length, urls, errors };
 }
 
 module.exports = { pushToDrive, pushToClickup, pushToCalendar };

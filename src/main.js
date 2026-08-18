@@ -33,7 +33,9 @@ function initStorage() {
 }
 
 function persistSessions() {
-  fs.writeFileSync(sessionsPath, JSON.stringify({ sessions, nextId }, null, 2), 'utf8');
+  const tmp = sessionsPath + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify({ sessions, nextId }, null, 2), 'utf8');
+  fs.renameSync(tmp, sessionsPath);
 }
 
 // ── API Key (safeStorage) ─────────────────────────────────────────────────────
@@ -142,8 +144,10 @@ function createWindow() {
             detail: 'Phase 1 — Recording + Transcription\nTranscription powered by Groq Whisper.',
           });
         }},
-        { type: 'separator' },
-        { label: 'Open Developer Tools', accelerator: 'F12', click: () => mainWindow.webContents.openDevTools() },
+        ...(!app.isPackaged ? [
+          { type: 'separator' },
+          { label: 'Open Developer Tools', accelerator: 'F12', click: () => mainWindow.webContents.openDevTools() },
+        ] : []),
       ],
     },
   ]);

@@ -166,7 +166,7 @@ async function analyzeTranscript({ transcript, feedback, mode, title, clientName
     // Strip accidental markdown wrapping
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
-    if (start === -1 || end === -1) {
+    if (start === -1 || end === -1 || end < start) {
       const e = new Error('Analysis returned invalid JSON');
       e.status = 500;
       throw e;

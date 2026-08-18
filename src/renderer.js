@@ -3,6 +3,11 @@ import * as Sentry from '@sentry/electron/renderer';
 
 Sentry.init({ dsn: 'https://e0a35240b3eb86faf9f387edf3613f65@o4511405360087040.ingest.de.sentry.io/4511683630071888' });
 
+function esc(str) {
+  if (str == null) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
 // ── State ─────────────────────────────────────────────────────────────────────
 let currentScreen = 'home';
 let selectedMode = null;
@@ -111,9 +116,9 @@ async function loadSessionList() {
     <div class="session-row" data-id="${s.id}">
       <div class="session-row-mode mode-dot-${s.mode}"></div>
       <div class="session-row-info">
-        <div class="session-row-client">${s.client_name || 'Untitled'} ${s.project_name ? '— ' + s.project_name : ''}</div>
+        <div class="session-row-client">${esc(s.client_name) || 'Untitled'} ${s.project_name ? '— ' + esc(s.project_name) : ''}</div>
         <div class="session-row-meta">${formatDate(s.created_at)} ${s.duration_seconds ? '· ' + formatDuration(s.duration_seconds) : ''}${s.analysis ? ' · <span class="session-analysed">✓ analysed</span>' : ''}</div>
-        ${s.transcript ? `<div class="session-row-preview">${s.transcript.slice(0, 120)}…</div>` : ''}
+        ${s.transcript ? `<div class="session-row-preview">${esc(s.transcript.slice(0, 120))}…</div>` : ''}
       </div>
       ${modeBadgeHTML(s.mode)}
     </div>
@@ -132,7 +137,7 @@ async function openSession(id) {
   document.getElementById('session-view-meta').innerHTML =
     `${modeBadgeHTML(session.mode)} <span>${formatDate(session.created_at)}</span>` +
     (session.duration_seconds ? ` <span>· ${formatDuration(session.duration_seconds)}</span>` : '') +
-    (session.project_name ? ` <span>· ${session.project_name}</span>` : '');
+    (session.project_name ? ` <span>· ${esc(session.project_name)}</span>` : '');
   document.getElementById('session-transcript').textContent = session.transcript || '(No transcript)';
 
   // Analysis tab
@@ -198,7 +203,14 @@ function renderAnalysisView(container, analysis, mode) {
         if (!v) continue;
         const row = document.createElement('div');
         row.className = 'analysis-doc-row';
-        row.innerHTML = `<span class="analysis-doc-label">${label}</span><span class="analysis-doc-value">${v}</span>`;
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'analysis-doc-label';
+        labelSpan.textContent = label;
+        const valueSpan = document.createElement('span');
+        valueSpan.className = 'analysis-doc-value';
+        valueSpan.textContent = String(v);
+        row.appendChild(labelSpan);
+        row.appendChild(valueSpan);
         grid.appendChild(row);
       }
       card.appendChild(grid);
@@ -421,6 +433,7 @@ async function stopRecording() {
 
   mainAudioBlob = new Blob(audioChunks, { type: recordingMimeType });
   audioChunks = [];
+  mediaRecorder = null;
 
   precallData = {
     mode: selectedMode,
@@ -833,7 +846,8 @@ async function reanalyseSession(session) {
 
   const apiKey = await window.electronAPI.hasApiKey();
   if (!apiKey) {
-    showError('no-key', () => reanalyseSession(session));
+    const e = new Error('No API key configured'); e.status = 401;
+    showError(e, () => reanalyseSession(session));
     return;
   }
 
@@ -849,7 +863,7 @@ async function reanalyseSession(session) {
     renderReviewScreen(currentAnalysis, session.mode);
     showScreen('review');
   } catch (err) {
-    showError(classifyError(err), () => reanalyseSession(session));
+    showError(err, () => reanalyseSession(session));
   }
 }
 
@@ -936,6 +950,7 @@ async function runPushClickup(session, cfg) {
     await window.electronAPI.updateSession(session.id, updates);
     session.push_results = updates.push_results;
     await renderSessionFooter(session);
+    if (result.errors?.length) alert(`${result.errors.length} task(s) failed to push:\n${result.errors.join('\n')}`);
   } catch (err) {
     btn.disabled = false;
     btn.textContent = '✅ ClickUp';
@@ -953,6 +968,7 @@ async function runPushCalendar(session) {
     await window.electronAPI.updateSession(session.id, updates);
     session.push_results = updates.push_results;
     await renderSessionFooter(session);
+    if (result.errors?.length) alert(`${result.errors.length} event(s) failed to push:\n${result.errors.join('\n')}`);
   } catch (err) {
     btn.disabled = false;
     btn.textContent = '📅 Calendar';
@@ -1124,7 +1140,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   document.getElementById('btn-consent-dismiss').addEventListener('click', () => {
     document.getElementById('consent-banner').classList.add('hidden');
-    startRecording();
   });
 
   // Recording
@@ -1161,7 +1176,10 @@ document.addEventListener('DOMContentLoaded', async () => {
       lastErrorContext();
     }
   });
-  document.getElementById('btn-error-home').addEventListener('click', () => showScreen('home'));
+  document.getElementById('btn-error-home').addEventListener('click', () => {
+    editingSessionId = null;
+    showScreen('home');
+  });
 
   // Review
   document.getElementById('btn-back-review').addEventListener('click', () => {
