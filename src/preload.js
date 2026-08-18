@@ -30,8 +30,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   googleOAuthBegin: () => ipcRenderer.invoke('google-oauth-begin'),
   googleOAuthStatus: () => ipcRenderer.invoke('google-oauth-status'),
   googleOAuthDisconnect: () => ipcRenderer.invoke('google-oauth-disconnect'),
-  getGoogleCreds: () => ipcRenderer.invoke('get-google-creds'),
-
   // Push integrations
   pushDrive: (params) => ipcRenderer.invoke('push-drive', params),
   pushClickup: (params) => ipcRenderer.invoke('push-clickup', params),

@@ -197,7 +197,13 @@ function fixAudioSetup() {
 
 ipcMain.handle('check-audio', () => checkAudioSetup());
 ipcMain.handle('fix-audio', () => fixAudioSetup());
-ipcMain.handle('open-external', (_e, url) => { shell.openExternal(url); });
+ipcMain.handle('open-external', (_e, url) => {
+  try {
+    const parsed = new URL(url);
+    if (!['https:', 'http:'].includes(parsed.protocol)) return;
+  } catch { return; }
+  shell.openExternal(url);
+});
 
 // ── IPC Handlers ──────────────────────────────────────────────────────────────
 ipcMain.handle('save-api-key', (_e, key) => { saveApiKey(key); return true; });
@@ -318,9 +324,9 @@ ipcMain.handle('google-oauth-disconnect', () => {
   return true;
 });
 
-ipcMain.handle('get-google-creds', () => {
-  return require('./google-oauth').loadCreds();
-});
+// get-google-creds removed: loadCreds was not exported and storeCreds was never
+// called, so the credential file was never written. No renderer code uses this
+// handler. Client secret must never cross the IPC boundary.
 
 // ── Push Handlers ─────────────────────────────────────────────────────────────
 ipcMain.handle('push-drive', async (_e, { session, templateFileId, targetFolderId }) => {

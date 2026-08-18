@@ -106,6 +106,7 @@ async function getValidAccessToken() {
       ...tokens,
       access_token: data.access_token,
       expires_at: data.expires_in ? Date.now() + data.expires_in * 1000 : null,
+      ...(data.refresh_token && { refresh_token: data.refresh_token }),
     });
     return data.access_token;
   } catch { return null; }
@@ -130,6 +131,30 @@ function beginOAuth() {
       const stateParam = url.searchParams.get('state');
       const error = url.searchParams.get('error');
 
+      // Validate before responding — success page must never show on error or state mismatch
+      if (error || !code) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Northlight Meetings</title></head>' +
+          '<body style="font-family:system-ui;background:#0E0E14;color:#C8CCE0;display:flex;align-items:center;' +
+          'justify-content:center;height:100vh;margin:0;text-align:center">' +
+          '<div><h2 style="color:#C44F4F;margin-bottom:12px">&#10007; Connection failed</h2>' +
+          '<p style="color:#8A92A8">You can close this tab and return to Northlight Meetings.</p></div>' +
+          '</body></html>');
+        callbackServer.close(); callbackServer = null;
+        reject(new Error(error || 'OAuth cancelled')); return;
+      }
+      if (stateParam !== state) {
+        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        res.end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Northlight Meetings</title></head>' +
+          '<body style="font-family:system-ui;background:#0E0E14;color:#C8CCE0;display:flex;align-items:center;' +
+          'justify-content:center;height:100vh;margin:0;text-align:center">' +
+          '<div><h2 style="color:#C44F4F;margin-bottom:12px">&#10007; Connection failed</h2>' +
+          '<p style="color:#8A92A8">Security check failed. Please try again.</p></div>' +
+          '</body></html>');
+        callbackServer.close(); callbackServer = null;
+        reject(new Error('State mismatch — try connecting again')); return;
+      }
+
       res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
       res.end('<!DOCTYPE html><html><head><meta charset="utf-8"><title>Northlight Meetings</title></head>' +
         '<body style="font-family:system-ui;background:#0E0E14;color:#C8CCE0;display:flex;align-items:center;' +
@@ -140,9 +165,6 @@ function beginOAuth() {
 
       callbackServer.close();
       callbackServer = null;
-
-      if (error || !code) { reject(new Error(error || 'OAuth cancelled')); return; }
-      if (stateParam !== state) { reject(new Error('State mismatch — try connecting again')); return; }
 
       try {
         const tokenRes = await fetch(GOOGLE_TOKEN_URL, {

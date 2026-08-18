@@ -64,7 +64,7 @@ const ERROR_MESSAGES = {
 
 function classifyError(err) {
   const status = err.status || 0;
-  if (status === 401 || err.message?.includes('No API key')) return 'no-key';
+  if (err.message?.includes('No API key')) return 'no-key';
   if (status === 401) return 'key-invalid';
   if (status === 429) return 'rate-limit';
   if (status === 413) return 'file-large';
@@ -101,7 +101,8 @@ function formatDate(isoString) {
 }
 
 function modeBadgeHTML(mode) {
-  return `<span class="mode-badge badge-${mode}">${mode}</span>`;
+  const safe = esc(mode);
+  return `<span class="mode-badge badge-${safe}">${safe}</span>`;
 }
 
 // ── Session List ──────────────────────────────────────────────────────────────
@@ -415,8 +416,10 @@ async function startRecording() {
   mediaRecorder._rawStreams = rawStreams;
 }
 
+let _stoppingRecording = false;
 async function stopRecording() {
-  if (!mediaRecorder) return;
+  if (!mediaRecorder || _stoppingRecording) return;
+  _stoppingRecording = true;
 
   clearInterval(timerInterval);
   stopLevelMeters();
@@ -434,6 +437,7 @@ async function stopRecording() {
   mainAudioBlob = new Blob(audioChunks, { type: recordingMimeType });
   audioChunks = [];
   mediaRecorder = null;
+  _stoppingRecording = false;
 
   precallData = {
     mode: selectedMode,
@@ -518,7 +522,7 @@ function setProcessingStage(stage) {
     document.getElementById('processing-sub').textContent = 'This usually takes 30–60 seconds depending on call length.';
   } else {
     document.getElementById('processing-title').textContent = 'Analysing…';
-    document.getElementById('processing-sub').textContent = 'Running the transcript through Groq Llama 3.3. Almost there.';
+    document.getElementById('processing-sub').textContent = 'Running the transcript through the AI model. Almost there.';
   }
 }
 
@@ -906,9 +910,6 @@ async function renderSessionFooter(session) {
       <button class="push-btn" id="btn-reanalyse" title="Re-run AI analysis on the saved transcript">↺ Re-analyse</button>
     </div>
     <div class="push-results-row" id="push-results-row">
-      ${pr.docUrl ? `<a class="push-result-link" href="${pr.docUrl}" target="_blank">📄 View Doc</a>` : ''}
-      ${pr.taskCount ? `<span class="push-result-text">✅ ${pr.taskCount} task${pr.taskCount !== 1 ? 's' : ''} in ClickUp</span>` : ''}
-      ${pr.eventUrls?.length ? pr.eventUrls.map((u, i) => `<a class="push-result-link" href="${u}" target="_blank">📅 Event${pr.eventUrls.length > 1 ? ` ${i+1}` : ''}</a>`).join('') : (pr.eventCount ? `<span class="push-result-text">📅 ${pr.eventCount} event${pr.eventCount !== 1 ? 's' : ''} in Calendar</span>` : '')}
     </div>
   `;
 
@@ -919,6 +920,44 @@ async function renderSessionFooter(session) {
   document.getElementById('btn-push-calendar')?.addEventListener('click', () => runPushCalendar(session));
   document.getElementById('btn-edit-analysis')?.addEventListener('click', () => openSessionForEdit(session));
   document.getElementById('btn-reanalyse')?.addEventListener('click', () => reanalyseSession(session));
+
+  // Build push-results links via DOM to avoid injecting stored URLs via innerHTML
+  const resultsRow = document.getElementById('push-results-row');
+  function safeLink(url, label) {
+    try { if (!['https:', 'http:'].includes(new URL(url).protocol)) return null; } catch { return null; }
+    const a = document.createElement('a');
+    a.className = 'push-result-link';
+    a.href = url;
+    a.target = '_blank';
+    a.textContent = label;
+    return a;
+  }
+  if (pr.docUrl) {
+    const a = safeLink(pr.docUrl, '📄 View Doc');
+    if (a) resultsRow.appendChild(a);
+  }
+  if (pr.taskUrls?.length) {
+    pr.taskUrls.forEach((u, i) => {
+      const a = safeLink(u, `✅ Task${pr.taskUrls.length > 1 ? ` ${i + 1}` : ''}`);
+      if (a) resultsRow.appendChild(a);
+    });
+  } else if (pr.taskCount != null) {
+    const span = document.createElement('span');
+    span.className = 'push-result-text';
+    span.textContent = `✅ ${pr.taskCount} task${pr.taskCount !== 1 ? 's' : ''} in ClickUp`;
+    resultsRow.appendChild(span);
+  }
+  if (pr.eventUrls?.length) {
+    pr.eventUrls.forEach((u, i) => {
+      const a = safeLink(u, `📅 Event${pr.eventUrls.length > 1 ? ` ${i + 1}` : ''}`);
+      if (a) resultsRow.appendChild(a);
+    });
+  } else if (pr.eventCount) {
+    const span = document.createElement('span');
+    span.className = 'push-result-text';
+    span.textContent = `📅 ${pr.eventCount} event${pr.eventCount !== 1 ? 's' : ''} in Calendar`;
+    resultsRow.appendChild(span);
+  }
 }
 
 async function runPushDrive(session, cfg) {
@@ -1167,7 +1206,15 @@ document.addEventListener('DOMContentLoaded', async () => {
   document.getElementById('btn-feedback-start').addEventListener('click', startFeedbackRecording);
   document.getElementById('btn-feedback-stop').addEventListener('click', stopFeedbackRecording);
   document.getElementById('btn-feedback-clear').addEventListener('click', clearFeedback);
-  document.getElementById('btn-feedback-skip').addEventListener('click', startProcessing);
+  document.getElementById('btn-feedback-skip').addEventListener('click', () => {
+    if (feedbackRecorder) {
+      clearInterval(feedbackTimerInterval);
+      feedbackRecorder._stream?.getTracks().forEach(t => t.stop());
+      feedbackRecorder = null;
+      feedbackChunks = [];
+    }
+    startProcessing();
+  });
 
   // Error
   document.getElementById('btn-error-retry').addEventListener('click', () => {
@@ -1312,7 +1359,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
   });
 
-  const audioResult = await window.electronAPI.checkAudio();
+  const audioResult = await window.electronAPI.checkAudio().catch(() => ({ error: true }));
   if (!audioResult.CableOutputAvailable && !audioResult.error) {
     showScreen('vbaudio-setup');
   } else {
