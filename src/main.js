@@ -140,8 +140,8 @@ function createWindow() {
         { label: 'About Northlight Meetings', click: () => {
           dialog.showMessageBox(mainWindow, {
             title: 'Northlight Meetings',
-            message: 'Northlight Meetings',
-            detail: 'Phase 1 — Recording + Transcription\nTranscription powered by Groq Whisper.',
+            message: `Northlight Meetings ${app.getVersion()}`,
+            detail: `Version ${app.getVersion()}\nElectron ${process.versions.electron}, Node ${process.versions.node}\nTranscription powered by Groq Whisper.`,
           });
         }},
         ...(!app.isPackaged ? [
