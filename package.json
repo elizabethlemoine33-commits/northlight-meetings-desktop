@@ -1,7 +1,7 @@
 {
   "name": "northlight-meetings",
   "productName": "Northlight Meetings",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Meeting recorder and transcription tool for Northlight",
   "main": ".webpack/main",
   "private": true,
